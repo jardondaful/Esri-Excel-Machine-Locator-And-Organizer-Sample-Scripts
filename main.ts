@@ -1,9 +1,18 @@
 function main(workbook: ExcelScript.Workbook) {
   // Get the source worksheet by name
-  let sourceSheet = workbook.getWorksheet("M2NELab");
+  let sourceSheetName = "M2NELab";
+  let destinationSheetName = "Sheet1";
+
+  // Call the function to insert data from source sheet to the end of destination sheet
+  insertSheetDataToEnd(workbook, sourceSheetName, destinationSheetName);
+}
+
+function insertSheetDataToEnd(workbook: ExcelScript.Workbook, sourceSheetName: string, destinationSheetName: string) {
+  // Get the source worksheet by name
+  let sourceSheet = workbook.getWorksheet(sourceSheetName);
 
   // Get the destination worksheet by name
-  let destinationSheet = workbook.getWorksheet("Sheet1");
+  let destinationSheet = workbook.getWorksheet(destinationSheetName);
 
   // Get the used range of the source sheet
   let sourceRange = sourceSheet.getUsedRange();
@@ -28,7 +37,7 @@ function main(workbook: ExcelScript.Workbook) {
   let destinationValues = destinationUsedRange.getValues();
 
   // Filter out blank rows
-  let nonBlankValues = destinationValues.filter(row => row.some(cellValue => cellValue !== ""));
+  let nonBlankValues = destinationValues.filter(row => row.slice(0, 9).some(cellValue => cellValue !== ""));
 
   // Clear the destination sheet
   destinationUsedRange.clear();
