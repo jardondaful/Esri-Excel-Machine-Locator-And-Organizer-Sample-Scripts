@@ -20,4 +20,20 @@ function main(workbook: ExcelScript.Workbook) {
 
   // Set the values in the destination sheet
   destinationRange.setValues(filteredValues);
+
+  // Get the used range of the destination sheet
+  let destinationUsedRange = destinationSheet.getUsedRange();
+
+  // Get the values in the destination used range
+  let destinationValues = destinationUsedRange.getValues();
+
+  // Filter out blank rows
+  let nonBlankValues = destinationValues.filter(row => row.some(cellValue => cellValue !== ""));
+
+  // Clear the destination sheet
+  destinationUsedRange.clear();
+
+  // Set the non-blank values back to the destination sheet
+  let nonBlankRange = destinationSheet.getRangeByIndexes(0, 0, nonBlankValues.length, nonBlankValues[0].length);
+  nonBlankRange.setValues(nonBlankValues);
 }
