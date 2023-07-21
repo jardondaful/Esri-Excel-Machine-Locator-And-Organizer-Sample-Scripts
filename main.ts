@@ -5,6 +5,20 @@ function main(workbook: ExcelScript.Workbook) {
   // Get the destination worksheet by name
   let destinationSheet = workbook.getWorksheet("Sheet1");
 
+  // If the destination sheet doesn't exist, create it
+  if (!destinationSheet) {
+    destinationSheet = workbook.addWorksheet("Sheet1");
+  }
+
+  // Clear everything within "Sheet1"
+  destinationSheet.getUsedRange()?.clear();
+
+  // Set the style of the first row for destinationSheet
+  let firstRow = destinationSheet.getRange("1:1");
+  firstRow.getFormat().getFill().setColor("002060"); // dark blue
+  firstRow.getFormat().getFont().setColor("FFFFFF"); // white
+  firstRow.getFormat().getFont().setBold(true); // bold
+
   // Get the used range of the source sheet
   let sourceRange = sourceSheet.getUsedRange();
 
@@ -29,13 +43,6 @@ function main(workbook: ExcelScript.Workbook) {
   // Set the values in the destination sheet
   destinationRange.setValues(filteredValues);
 
-  // Set the style of the first row for destinationSheet
-  let firstRowDestinationSheet = destinationSheet.getRange("1:1");
-  firstRowDestinationSheet.getFormat().getFill().setColor("002060"); // dark blue
-  firstRowDestinationSheet.getFormat().getFont().setColor("FFFFFF"); // white
-  firstRowDestinationSheet.getFormat().getFont().setBold(true); // bold
-  firstRowDestinationSheet.getFormat().getFont().setSize(18); // font size 18
-
   // Append data from "M2NW Hallway (Front of 60) -->"
   let sourceSheet2 = workbook.getWorksheet("M2NW Hallway (Front of 60) -->");
   appendDataToSheet(sourceSheet2, destinationSheet);
@@ -46,9 +53,6 @@ function main(workbook: ExcelScript.Workbook) {
 
   // Sort and categorize the destination sheet based on column "I"
   sortAndCategorize(destinationSheet, workbook);
-
-  // After appending data, call the following function
-  addExtraRows(destinationSheet);
 }
 
 function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet: ExcelScript.Worksheet) {
@@ -99,6 +103,10 @@ function sortAndCategorize(sheet: ExcelScript.Worksheet, workbook: ExcelScript.W
   let headerRow = ["Computer Name", "Owner", "Model", "Serial #", "Asset", "Asset #", "Location", "Location Status", "Model #", "Notes", "Order", "Title"];
 
   uniqueValues.forEach((value) => {
+    if (value === headerRow[8]) { // Skip header row
+      return;
+    }
+
     // Create new worksheet for each unique value, if it doesn't already exist
     let newSheetName = `Category_${value}`;
     let newSheet = workbook.getWorksheet(newSheetName);
@@ -109,38 +117,19 @@ function sortAndCategorize(sheet: ExcelScript.Worksheet, workbook: ExcelScript.W
       newSheet.getUsedRange()?.clear();
     }
 
-    // Write the header row to the new worksheet
-    newSheet.getRangeByIndexes(0, 0, 1, headerRow.length).setValues([headerRow]);
-
     // Set the style of the first row for newSheet
     let firstRowNewSheet = newSheet.getRange("1:1");
     firstRowNewSheet.getFormat().getFill().setColor("002060"); // dark blue
     firstRowNewSheet.getFormat().getFont().setColor("FFFFFF"); // white
     firstRowNewSheet.getFormat().getFont().setBold(true); // bold
-    firstRowNewSheet.getFormat().getFont().setSize(18); // font size 18
+
+    // Write the header row to the new worksheet
+    newSheet.getRangeByIndexes(0, 0, 1, headerRow.length).setValues([headerRow]);
 
     // Filter rows based on the column "I" value and remove blank rows
     let filteredRows = sheetValues.filter(row => row[8] === value && row.join('').trim() !== '');
 
     // Write the filtered data to the new worksheet
     newSheet.getRangeByIndexes(1, 0, filteredRows.length, filteredRows[0].length).setValues(filteredRows);
-
-    // After setting the values in the new sheet, call the following function
-    addExtraRows(newSheet);
   });
-}
-
-// Define a new function to add extra rows
-function addExtraRows(sheet: ExcelScript.Worksheet) {
-  // Determine how many rows in the sheet
-  let rowCount = sheet.getUsedRange().getRowCount();
-  // The number of rows to skip
-  let skipRows = 5;
-  // Starting from the sixth row (0-based index)
-  for (let i = skipRows; i < rowCount; i += skipRows + 1) {
-    // Add a row
-    sheet.getRangeByIndexes(i, 0, 1, sheet.getUsedRange().getColumnCount()).getFormat().getFill().setColor("000000");
-    // Update rowCount because we added a row
-    rowCount++;
-  }
 }
