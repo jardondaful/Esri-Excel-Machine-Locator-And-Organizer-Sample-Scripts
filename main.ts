@@ -36,6 +36,9 @@ function main(workbook: ExcelScript.Workbook) {
   // Append data from "M2NE Hallway (Front of 360) -->"
   let sourceSheet3 = workbook.getWorksheet("M2NE Hallway (Front of 360) -->");
   appendDataToSheet(sourceSheet3, destinationSheet);
+
+  // Sort and categorize the destination sheet based on column "I"
+  sortAndCategorize(destinationSheet, workbook);
 }
 
 function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet: ExcelScript.Worksheet) {
@@ -59,3 +62,55 @@ function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet:
 }
 
 
+function sortAndCategorize(sheet: ExcelScript.Worksheet, workbook: ExcelScript.Workbook) {
+  // Get values from the sheet
+  let sheetValues = sheet.getUsedRange().getValues();
+
+  // Sort the data based on column "I" (9th column, index 8)
+  sheetValues.sort((a, b) => {
+    if (a[8] < b[8]) {
+      return -1;
+    } else if (a[8] > b[8]) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+
+  // Write sorted data back to the sheet
+  sheet.getRangeByIndexes(0, 0, sheetValues.length, sheetValues[0].length).setValues(sheetValues);
+
+  // Get column "I" (index 8) values from the sorted sheet values
+  let columnIValues = sheetValues.map(row => row[8]);
+
+  // Remove duplicates
+  let uniqueValues = [...new Set(columnIValues)];
+
+  // Define header row
+  let headerRow = ["Computer Name", "Owner", "Model", "Serial #", "Asset", "Asset #", "Location", "Location Status", "Model #", "Notes", "Order", "Title"];
+
+  uniqueValues.forEach((value, index) => {
+    if (index === 0) { // Skip header row
+      return;
+    }
+    // Create new worksheet for each unique value, if it doesn't already exist
+    let newSheetName = `Category_${value}`;
+    let newSheet = workbook.getWorksheet(newSheetName);
+    if (!newSheet) {
+      newSheet = workbook.addWorksheet(newSheetName);
+    }
+
+    // Clear the existing data in the new sheet
+    newSheet.getUsedRange()?.clear();
+
+    // Write the header row to the new worksheet
+    newSheet.getRangeByIndexes(0, 0, 1, headerRow.length).setValues([headerRow]);
+
+    // Filter rows based on the column "I" value
+    let filteredRows = sheetValues.filter(row => row[8] === value);
+
+    // Write the filtered data to the new worksheet
+    // Starts writing from row index 1 to skip the header row
+    newSheet.getRangeByIndexes(1, 0, filteredRows.length, filteredRows[0].length).setValues(filteredRows);
+  });
+}
