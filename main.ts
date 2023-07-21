@@ -5,6 +5,20 @@ function main(workbook: ExcelScript.Workbook) {
   // Get the destination worksheet by name
   let destinationSheet = workbook.getWorksheet("Sheet1");
 
+  // If the destination sheet doesn't exist, create it
+  if (!destinationSheet) {
+    destinationSheet = workbook.addWorksheet("Sheet1");
+  }
+
+  // Clear everything within "Sheet1"
+  destinationSheet.getUsedRange()?.clear();
+
+  // Set the style of the first row for destinationSheet
+  let firstRow = destinationSheet.getRange("1:1");
+  firstRow.getFormat().getFill().setColor("002060"); // dark blue
+  firstRow.getFormat().getFont().setColor("FFFFFF"); // white
+  firstRow.getFormat().getFont().setBold(true); // bold
+
   // Get the used range of the source sheet
   let sourceRange = sourceSheet.getUsedRange();
 
@@ -61,7 +75,6 @@ function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet:
   destinationRange.setValues(values);
 }
 
-
 function sortAndCategorize(sheet: ExcelScript.Worksheet, workbook: ExcelScript.Workbook) {
   // Get values from the sheet
   let sheetValues = sheet.getUsedRange().getValues();
@@ -89,28 +102,34 @@ function sortAndCategorize(sheet: ExcelScript.Worksheet, workbook: ExcelScript.W
   // Define header row
   let headerRow = ["Computer Name", "Owner", "Model", "Serial #", "Asset", "Asset #", "Location", "Location Status", "Model #", "Notes", "Order", "Title"];
 
-  uniqueValues.forEach((value, index) => {
-    if (index === 0) { // Skip header row
+  uniqueValues.forEach((value) => {
+    if (value === headerRow[8]) { // Skip header row
       return;
     }
+
     // Create new worksheet for each unique value, if it doesn't already exist
     let newSheetName = `Category_${value}`;
     let newSheet = workbook.getWorksheet(newSheetName);
     if (!newSheet) {
       newSheet = workbook.addWorksheet(newSheetName);
+    } else {
+      // If the worksheet already exists, clear the existing data
+      newSheet.getUsedRange()?.clear();
     }
 
-    // Clear the existing data in the new sheet
-    newSheet.getUsedRange()?.clear();
+    // Set the style of the first row for newSheet
+    let firstRowNewSheet = newSheet.getRange("1:1");
+    firstRowNewSheet.getFormat().getFill().setColor("002060"); // dark blue
+    firstRowNewSheet.getFormat().getFont().setColor("FFFFFF"); // white
+    firstRowNewSheet.getFormat().getFont().setBold(true); // bold
 
     // Write the header row to the new worksheet
     newSheet.getRangeByIndexes(0, 0, 1, headerRow.length).setValues([headerRow]);
 
-    // Filter rows based on the column "I" value
-    let filteredRows = sheetValues.filter(row => row[8] === value);
+    // Filter rows based on the column "I" value and remove blank rows
+    let filteredRows = sheetValues.filter(row => row[8] === value && row.join('').trim() !== '');
 
     // Write the filtered data to the new worksheet
-    // Starts writing from row index 1 to skip the header row
     newSheet.getRangeByIndexes(1, 0, filteredRows.length, filteredRows[0].length).setValues(filteredRows);
   });
 }
