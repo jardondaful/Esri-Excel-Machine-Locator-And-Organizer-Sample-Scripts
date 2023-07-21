@@ -57,3 +57,5 @@ function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet:
   // Set the values in the destination sheet from the source
   destinationRange.setValues(values);
 }
+
+
