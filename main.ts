@@ -29,34 +29,31 @@ function main(workbook: ExcelScript.Workbook) {
   // Set the values in the destination sheet
   destinationRange.setValues(filteredValues);
 
+  // Append data from "M2NW Hallway (Front of 60) -->"
+  let sourceSheet2 = workbook.getWorksheet("M2NW Hallway (Front of 60) -->");
+  appendDataToSheet(sourceSheet2, destinationSheet);
+
+  // Append data from "M2NE Hallway (Front of 360) -->"
+  let sourceSheet3 = workbook.getWorksheet("M2NE Hallway (Front of 360) -->");
+  appendDataToSheet(sourceSheet3, destinationSheet);
+}
+
+function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet: ExcelScript.Worksheet) {
+  // Get the used range of the source sheet
+  let sourceRange = sourceSheet.getUsedRange();
+
+  // Get the values in the source range
+  let values = sourceRange.getValues();
+
   // Get the used range of the destination sheet
   let destinationUsedRange = destinationSheet.getUsedRange();
 
   // Get the last row number with text in the destination sheet
   let lastRowWithText = destinationUsedRange ? destinationUsedRange.getRowCount() : 0;
 
-  // Now, let's append data from "M2NW Hallway (Front of 60) -->"
-  let sourceSheet2 = workbook.getWorksheet("M2NW Hallway (Front of 60) -->");
+  // Determine the destination range for the source data
+  let destinationRange = destinationSheet.getRangeByIndexes(lastRowWithText, 0, values.length, values[0].length);
 
-  // Get the used range of the second source sheet
-  let sourceRange2 = sourceSheet2.getUsedRange();
-
-  // Get the values in the second source range
-  let values2 = sourceRange2.getValues();
-
-  // Determine the destination range for the second source data
-  let destinationRange2 = destinationSheet.getRangeByIndexes(lastRowWithText, 0, values2.length, values2[0].length);
-
-  // Set the values in the destination sheet from the second source
-  destinationRange2.setValues(values2);
-
-  // Get the last row number with text in the destination sheet
-  let finalRowWithText = destinationSheet.getUsedRange().getRowCount();
-
-  // Get the last column number with text in the destination sheet
-  let finalColumnWithText = destinationSheet.getUsedRange().getColumnCount();
-
-  // Output the last row and last column with text
-  console.log("Final Row with Text: " + finalRowWithText);
-  console.log("Final Column with Text: " + finalColumnWithText);
+  // Set the values in the destination sheet from the source
+  destinationRange.setValues(values);
 }
