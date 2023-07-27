@@ -2,7 +2,7 @@ function main(workbook: ExcelScript.Workbook) {
   // Get the source worksheet by name
   let sourceSheet = workbook.getWorksheet("M2NELab");
 
-  // Get the destination worksheet by name
+  // Get the destination worksheet by name (Sheet1)
   let destinationSheet = workbook.getWorksheet("Sheet1");
 
   // If the destination sheet doesn't exist, create it
@@ -22,11 +22,6 @@ function main(workbook: ExcelScript.Workbook) {
   // Get the used range of the source sheet
   let sourceRange = sourceSheet.getUsedRange();
 
-  // Output the number of rows and columns in the source range
-  let numRows = sourceRange.getRowCount();
-  let numCols = sourceRange.getColumnCount();
-  console.log("Source Range: " + numRows + " rows, " + numCols + " columns");
-
   // Get the values in the source range
   let values = sourceRange.getValues();
 
@@ -37,10 +32,16 @@ function main(workbook: ExcelScript.Workbook) {
   console.log("Filtered Values:");
   console.log(filteredValues);
 
-  // Clear the destination sheet before pasting the data
-  let destinationRange = destinationSheet.getRange("A1:J" + filteredValues.length);
+  // Get the used range of the destination sheet
+  let destinationUsedRange = destinationSheet.getUsedRange();
 
-  // Set the values in the destination sheet
+  // Get the last row number with text in the destination sheet
+  let lastRowWithText = destinationUsedRange ? destinationUsedRange.getRowCount() : 0;
+
+  // Determine the destination range for the source data
+  let destinationRange = destinationSheet.getRangeByIndexes(lastRowWithText, 0, filteredValues.length, filteredValues[0].length);
+
+  // Set the values in the destination sheet from the source
   destinationRange.setValues(filteredValues);
 
   // Append data from "M2NW Hallway (Front of 60) -->"
@@ -50,9 +51,6 @@ function main(workbook: ExcelScript.Workbook) {
   // Append data from "M2NE Hallway (Front of 360) -->"
   let sourceSheet3 = workbook.getWorksheet("M2NE Hallway (Front of 360) -->");
   appendDataToSheet(sourceSheet3, destinationSheet);
-
-  // Sort and categorize the destination sheet based on column "I"
-  sortAndCategorize(destinationSheet, workbook);
 }
 
 function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet: ExcelScript.Worksheet) {
@@ -73,63 +71,4 @@ function appendDataToSheet(sourceSheet: ExcelScript.Worksheet, destinationSheet:
 
   // Set the values in the destination sheet from the source
   destinationRange.setValues(values);
-}
-
-function sortAndCategorize(sheet: ExcelScript.Worksheet, workbook: ExcelScript.Workbook) {
-  // Get values from the sheet
-  let sheetValues = sheet.getUsedRange().getValues();
-
-  // Sort the data based on column "I" (9th column, index 8)
-  sheetValues.sort((a, b) => {
-    if (a[8] < b[8]) {
-      return -1;
-    } else if (a[8] > b[8]) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
-
-  // Write sorted data back to the sheet
-  sheet.getRangeByIndexes(0, 0, sheetValues.length, sheetValues[0].length).setValues(sheetValues);
-
-  // Get column "I" (index 8) values from the sorted sheet values
-  let columnIValues = sheetValues.map(row => row[8]);
-
-  // Remove duplicates
-  let uniqueValues = [...new Set(columnIValues)];
-
-  // Define header row
-  let headerRow = ["Computer Name", "Owner", "Model", "Serial #", "Asset", "Asset #", "Location", "Location Status", "Model #", "Notes", "Order", "Title"];
-
-  uniqueValues.forEach((value) => {
-    if (value === headerRow[8]) { // Skip header row
-      return;
-    }
-
-    // Create new worksheet for each unique value, if it doesn't already exist
-    let newSheetName = `Category_${value}`;
-    let newSheet = workbook.getWorksheet(newSheetName);
-    if (!newSheet) {
-      newSheet = workbook.addWorksheet(newSheetName);
-    } else {
-      // If the worksheet already exists, clear the existing data
-      newSheet.getUsedRange()?.clear();
-    }
-
-    // Set the style of the first row for newSheet
-    let firstRowNewSheet = newSheet.getRange("1:1");
-    firstRowNewSheet.getFormat().getFill().setColor("002060"); // dark blue
-    firstRowNewSheet.getFormat().getFont().setColor("FFFFFF"); // white
-    firstRowNewSheet.getFormat().getFont().setBold(true); // bold
-
-    // Write the header row to the new worksheet
-    newSheet.getRangeByIndexes(0, 0, 1, headerRow.length).setValues([headerRow]);
-
-    // Filter rows based on the column "I" value and remove blank rows
-    let filteredRows = sheetValues.filter(row => row[8] === value && row.join('').trim() !== '');
-
-    // Write the filtered data to the new worksheet
-    newSheet.getRangeByIndexes(1, 0, filteredRows.length, filteredRows[0].length).setValues(filteredRows);
-  });
 }
