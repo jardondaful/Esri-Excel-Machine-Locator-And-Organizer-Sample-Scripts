@@ -1,7 +1,7 @@
-# ExcelSheetMigrator
+# Esri Excel Machine Locator and Organizer Scripts
 
 ## Description
-This repository contains ExcelScript scripts for transferring and formatting data between multiple worksheets within an Excel workbook. It ensures seamless data migration from specified source sheets to a destination sheet with added formatting for better readability.
+This repository contains ExcelScript scripts that I used at Esri for transferring and formatting data between multiple worksheets within an Excel workbook. It ensures seamless data migration from specified source sheets to a destination sheet with added formatting for better readability.
 
 ## Features
 - **Data Transfer**: Automates the transfer of data from specific worksheets to a central worksheet.
